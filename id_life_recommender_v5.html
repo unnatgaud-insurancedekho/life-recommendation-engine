@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Life Insurance Finder — InsuranceDekho</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f7fa;
+  --white: #ffffff;
+  --brand: #e8192c;
+  --brand-dark: #c8111f;
+  --brand-light: #fff0f1;
+  --brand-mid: #fcc;
+  --text: #111827;
+  --text2: #6b7280;
+  --text3: #9ca3af;
+  --border: #e5e7eb;
+  --border2: #d1d5db;
+  --green: #059669;
+  --green-bg: #ecfdf5;
+  --blue: #2563eb;
+  --blue-bg: #eff6ff;
+  --purple: #7c3aed;
+  --purple-bg: #f5f3ff;
+  --amber: #d97706;
+  --amber-bg: #fffbeb;
+  --red: #dc2626;
+  --radius: 20px;
+  --radius-sm: 12px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); }
+
+/* ── APP SHELL ── */
+.app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; max-width: 430px; margin: 0 auto; background: var(--white); position: relative; overflow: hidden; box-shadow: var(--shadow-lg); }
+
+/* ── TOPBAR ── */
+.topbar { flex-shrink: 0; padding: 14px 20px 10px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: var(--white); }
+.topbar-left { display: flex; align-items: center; gap: 10px; }
+.logo-mark { width: 34px; height: 34px; background: var(--brand); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: white; letter-spacing: -0.5px; }
+.logo-text { font-size: 14px; font-weight: 700; color: var(--text); }
+.logo-sub { font-size: 10px; color: var(--text3); margin-top: 1px; }
+.lang-toggle { display: flex; background: var(--bg); border-radius: 8px; padding: 2px; gap: 2px; }
+.lang-btn { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; border: none; background: none; cursor: pointer; color: var(--text3); font-family: 'Plus Jakarta Sans', sans-serif; transition: all 0.15s; }
+.lang-btn.active { background: var(--white); color: var(--brand); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+/* ── PROGRESS ── */
+.progress-shell { flex-shrink: 0; padding: 12px 20px 0; }
+.progress-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.progress-step-label { font-size: 11px; color: var(--text3); font-weight: 500; }
+.progress-track { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.progress-fill { height: 4px; background: var(--brand); border-radius: 2px; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
+
+/* ── SCREEN SCROLL ── */
+.screens { flex: 1; overflow: hidden; position: relative; }
+.screen { position: absolute; inset: 0; overflow-y: auto; padding: 24px 20px 100px; opacity: 0; transform: translateX(40px); pointer-events: none; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+#screenResult, #screenLoading { padding: 0; overflow: hidden; }
+.screen.active { opacity: 1; transform: translateX(0); pointer-events: all; }
+.screen.exit-left { opacity: 0; transform: translateX(-40px); pointer-events: none; }
+
+/* ── QUESTION ── */
+.q-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--brand); margin-bottom: 8px; }
+.q-text { font-size: 22px; font-weight: 700; line-height: 1.25; color: var(--text); margin-bottom: 6px; }
+.q-sub { font-size: 13px; color: var(--text2); margin-bottom: 28px; line-height: 1.5; }
+
+/* ── OPTION TILES ── */
+.options { display: grid; gap: 10px; }
+.options.cols2 { grid-template-columns: 1fr 1fr; }
+.options.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+.opt { 
+  background: var(--white); border: 2px solid var(--border); border-radius: var(--radius-sm);
+  padding: 16px 14px; cursor: pointer; transition: all 0.18s; user-select: none;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  -webkit-tap-highlight-color: transparent;
+}
+.opt:active { transform: scale(0.97); }
+.opt.selected { border-color: var(--brand); background: var(--brand-light); }
+.opt-icon { font-size: 26px; line-height: 1; }
+.opt-label { font-size: 14px; font-weight: 600; color: var(--text); }
+.opt-sub { font-size: 11px; color: var(--text2); line-height: 1.4; }
+.opt.selected .opt-label { color: var(--brand-dark); }
+.opt.selected .opt-sub { color: var(--brand); }
+
+/* ── COMPACT OPTIONS (age, income) ── */
+.opts-compact { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.opt-compact {
+  background: var(--white); border: 2px solid var(--border); border-radius: var(--radius-sm);
+  padding: 14px 12px; cursor: pointer; transition: all 0.15s; text-align: center; user-select: none;
+}
+.opt-compact:active { transform: scale(0.97); }
+.opt-compact.selected { border-color: var(--brand); background: var(--brand-light); color: var(--brand-dark); font-weight: 600; }
+.opt-compact-label { font-size: 15px; font-weight: 600; color: var(--text); }
+.opt-compact-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.opt-compact.selected .opt-compact-label { color: var(--brand-dark); }
+
+/* ── STICKY FOOTER NAV ── */
+.footer-nav { flex-shrink: 0; padding: 12px 20px 20px; background: var(--white); border-top: 1px solid var(--border); display: flex; gap: 10px; }
+.btn { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 600; border: none; border-radius: var(--radius-sm); padding: 15px 20px; cursor: pointer; transition: all 0.18s; flex: 1; }
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: var(--brand); color: white; }
+.btn-primary:hover { background: var(--brand-dark); }
+.btn-primary:disabled { background: var(--border2); color: var(--text3); cursor: not-allowed; transform: none; }
+.btn-ghost { background: var(--bg); color: var(--text2); flex: 0 0 auto; width: 52px; padding: 15px 0; font-size: 18px; }
+
+/* ── LOADING ── */
+.loading-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 16px; }
+.spinner { width: 44px; height: 44px; border: 3px solid var(--border); border-top-color: var(--brand); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 14px; color: var(--text2); font-weight: 500; }
+.loading-sub { font-size: 12px; color: var(--text3); }
+
+/* ── RESULT SCREEN ── */
+.result-screen { padding: 0; display: flex; flex-direction: column; height: 100%; }
+
+/* client name banner */
+.result-banner { padding: 16px 20px; background: var(--brand); color: white; }
+.result-banner-label { font-size: 11px; opacity: 0.8; font-weight: 500; margin-bottom: 2px; }
+.result-banner-name { font-size: 18px; font-weight: 700; }
+.result-banner-sub { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+
+/* card carousel */
+.cards-area { flex: 1; overflow: hidden; position: relative; }
+.cards-scroll { display: flex; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.cards-scroll::-webkit-scrollbar { display: none; }
+.result-card { flex: 0 0 100%; scroll-snap-align: start; padding: 16px 20px 20px; overflow-y: auto; }
+
+/* card dots */
+.card-dots { display: flex; justify-content: center; gap: 6px; padding: 8px 0 4px; flex-shrink: 0; }
+.dot { width: 6px; height: 6px; border-radius: 3px; background: var(--border2); transition: all 0.2s; }
+.dot.active { background: var(--brand); width: 18px; }
+
+/* plan card */
+.plan-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; margin-bottom: 12px; }
+.plan-header-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.insurer-badge { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+.plan-name-big { font-size: 18px; font-weight: 700; color: var(--text); line-height: 1.2; margin-bottom: 3px; }
+.plan-insurer-name { font-size: 12px; color: var(--text2); }
+
+/* match bar */
+
+/* checkmarks */
+.checks { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.check-tag { display: flex; align-items: center; gap: 5px; background: var(--green-bg); color: var(--green); font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 20px; }
+.check-tag svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+/* why box */
+.why-box { background: var(--brand-light); border-left: 3px solid var(--brand); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 12px 14px; margin-bottom: 16px; }
+.why-title { font-size: 11px; font-weight: 700; color: var(--brand); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.why-text { font-size: 13px; color: var(--text); line-height: 1.6; }
+
+
+
+/* IRR */
+.irr-box { display:flex; align-items:center; gap:10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:10px 14px; margin-bottom:14px; flex-wrap:wrap; }
+.irr-label { font-size:11px; font-weight:700; color:#065f46; text-transform:uppercase; letter-spacing:0.05em; }
+.irr-val { font-size:15px; font-weight:700; color:#059669; }
+.irr-note { font-size:10px; color:#6b7280; width:100%; margin-top:2px; }
+
+/* features */
+.feat-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.feat-chip { font-size: 11px; color: var(--text2); background: var(--white); border: 1px solid var(--border); padding: 5px 10px; border-radius: 20px; }
+
+/* whatsapp cta */
+.wa-btn { 
+  width: 100%; background: #25d366; color: white; border: none; border-radius: var(--radius-sm);
+  padding: 15px 20px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all 0.18s; margin-bottom: 8px;
+}
+.wa-btn:active { transform: scale(0.98); background: #1fb855; }
+.wa-icon { font-size: 18px; }
+
+.reset-btn { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px 20px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 600; color: var(--text2); cursor: pointer; }
+
+/* ── WELCOME ── */
+.welcome { padding: 32px 20px; display: flex; flex-direction: column; height: 100%; }
+.welcome-top { flex: 1; }
+.welcome-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--brand-light); color: var(--brand); font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 20px; margin-bottom: 24px; border: 1px solid var(--brand-mid); }
+.welcome-title { font-size: 28px; font-weight: 700; line-height: 1.2; margin-bottom: 12px; }
+.welcome-title span { color: var(--brand); }
+.welcome-desc { font-size: 14px; color: var(--text2); line-height: 1.6; margin-bottom: 28px; }
+.welcome-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 32px; }
+.w-stat { background: var(--bg); border-radius: var(--radius-sm); padding: 14px 10px; text-align: center; }
+.w-stat-num { font-size: 20px; font-weight: 700; color: var(--text); }
+.w-stat-label { font-size: 10px; color: var(--text3); margin-top: 2px; line-height: 1.3; }
+.welcome-steps { display: flex; flex-direction: column; gap: 10px; }
+.w-step { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text2); }
+.w-step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: white; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.start-btn { width: 100%; background: var(--brand); color: white; border: none; border-radius: var(--radius-sm); padding: 16px 20px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.18s; margin-top: 24px; }
+.start-btn:active { transform: scale(0.98); }
+
+/* ── CLIENT NAME FIELD ── */
+.name-input-wrap { margin-bottom: 20px; }
+.name-input { width: 100%; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; font-weight: 600; color: var(--text); border: 2px solid var(--border); border-radius: var(--radius-sm); padding: 16px 18px; outline: none; transition: border-color 0.15s; background: var(--white); }
+.name-input:focus { border-color: var(--brand); }
+.name-input::placeholder { color: var(--text3); font-weight: 400; font-size: 15px; }
+
+/* type colors */
+.type-term { background: #ecfdf5; color: #065f46; }
+.type-guaranteed { background: #eff6ff; color: #1e3a8a; }
+.type-ulip { background: #f5f3ff; color: #4c1d95; }
+.type-pension { background: #fffbeb; color: #78350f; }
+.type-par_endowment { background: #f0fdf4; color: #14532d; }
+.type-child { background: #fff7ed; color: #7c2d12; }
+
+/* insurer colors */
+.ins-0{background:#fff0f1;color:#e8192c}
+.ins-1{background:#eff6ff;color:#2563eb}
+.ins-2{background:#fdf4ff;color:#9333ea}
+.ins-3{background:#f0fdf4;color:#16a34a}
+.ins-4{background:#fffbeb;color:#d97706}
+.ins-5{background:#fef2f2;color:#dc2626}
+.ins-6{background:#ecfeff;color:#0891b2}
+.ins-7{background:#fdf2f8;color:#db2777}
+
+@media (min-width: 431px) {
+  .app { border-radius: 24px; margin: 20px auto; height: calc(100vh - 40px); height: calc(100dvh - 40px); }
+  body { background: #e8ecf0; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo-mark">ID</div>
+      <div>
+        <div class="logo-text">InsuranceDekho</div>
+        <div class="logo-sub" id="topSub">Life Insurance Finder</div>
+      </div>
+    </div>
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('hi')">हि</button>
+    </div>
+  </div>
+
+  <!-- PROGRESS (hidden on welcome/result) -->
+  <div class="progress-shell" id="progressShell" style="display:none">
+    <div class="progress-top">
+      <span class="progress-step-label" id="stepLabel">Step 1 of 8</span>
+      <span class="progress-step-label" id="stepName"></span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:12%"></div></div>
+  </div>
+
+  <!-- SCREENS CONTAINER -->
+  <div class="screens" id="screensContainer">
+
+    <!-- WELCOME -->
+    <div class="screen active" id="screenWelcome">
+      <div class="welcome">
+        <div class="welcome-top">
+          <div class="welcome-badge">🛡️ <span id="wb1">POSP Agent Tool</span></div>
+          <div class="welcome-title" id="wt1">Find the <span>right plan</span><br>for your client</div>
+          <div class="welcome-desc" id="wd1">Answer 8 quick questions while talking to your client. We'll score 81 plans and show you the best 3 matches with a ready script to explain.</div>
+          <div class="welcome-stats">
+            <div class="w-stat"><div class="w-stat-num">81</div><div class="w-stat-label" id="ws1">Plans scored</div></div>
+            <div class="w-stat"><div class="w-stat-num">15</div><div class="w-stat-label" id="ws2">Insurers</div></div>
+            <div class="w-stat"><div class="w-stat-num">&lt;2m</div><div class="w-stat-label" id="ws3">To results</div></div>
+          </div>
+          <div class="welcome-steps">
+            <div class="w-step"><div class="w-step-num">1</div><span id="wstep1">Enter client profile (age, income, goal)</span></div>
+            <div class="w-step"><div class="w-step-num">2</div><span id="wstep2">Get top 3 matched plans instantly</span></div>
+            <div class="w-step"><div class="w-step-num">3</div><span id="wstep3">Share summary to client on WhatsApp</span></div>
+          </div>
+        </div>
+        <button class="start-btn" onclick="startFlow()" id="startBtn">Start for new client →</button>
+      </div>
+    </div>
+
+    <!-- Q1: Client Name -->
+    <div class="screen" id="screen1">
+      <div class="q-label" id="ql1">CLIENT DETAILS · 1 OF 8</div>
+      <div class="q-text" id="qt1">What's your client's name?</div>
+      <div class="q-sub" id="qs1">This personalises the recommendation card and WhatsApp message.</div>
+      <div class="name-input-wrap">
+        <input class="name-input" id="clientName" type="text" placeholder="e.g. Ramesh Kumar" autocomplete="off" oninput="validateName()">
+      </div>
+    </div>
+
+    <!-- Q2: Age -->
+    <div class="screen" id="screen2">
+      <div class="q-label" id="ql2">AGE · 2 OF 8</div>
+      <div class="q-text" id="qt2">How old is your client?</div>
+      <div class="q-sub" id="qs2">Age determines which plans they're eligible for.</div>
+      <div class="opts-compact" id="ageOpts">
+        <div class="opt-compact" data-val="25" onclick="selectCompact('age',this)"><div class="opt-compact-label">18–30</div><div class="opt-compact-sub" id="ageSubA">Young adult</div></div>
+        <div class="opt-compact" data-val="35" onclick="selectCompact('age',this)"><div class="opt-compact-label">31–40</div><div class="opt-compact-sub" id="ageSubB">Prime earning</div></div>
+        <div class="opt-compact" data-val="45" onclick="selectCompact('age',this)"><div class="opt-compact-label">41–50</div><div class="opt-compact-sub" id="ageSubC">Mid career</div></div>
+        <div class="opt-compact" data-val="55" onclick="selectCompact('age',this)"><div class="opt-compact-label">51–60</div><div class="opt-compact-sub" id="ageSubD">Pre-retirement</div></div>
+        <div class="opt-compact" data-val="65" onclick="selectCompact('age',this)"><div class="opt-compact-label">61–70</div><div class="opt-compact-sub" id="ageSubE">Senior</div></div>
+      </div>
+    </div>
+
+    <!-- Q3: Income -->
+    <div class="screen" id="screen3">
+      <div class="q-label" id="ql3">INCOME · 3 OF 8</div>
+      <div class="q-text" id="qt3">What is the annual income?</div>
+      <div class="q-sub" id="qs3">This helps us suggest the right cover amount for your client.</div>
+      <div class="opts-compact" id="incomeOpts">
+        <div class="opt-compact" data-val="400000" onclick="selectCompact('income',this)"><div class="opt-compact-label">Up to ₹5L</div></div>
+        <div class="opt-compact" data-val="750000" onclick="selectCompact('income',this)"><div class="opt-compact-label">₹5–10L</div></div>
+        <div class="opt-compact" data-val="1250000" onclick="selectCompact('income',this)"><div class="opt-compact-label">₹10–15L</div></div>
+        <div class="opt-compact" data-val="2000000" onclick="selectCompact('income',this)"><div class="opt-compact-label">₹15–25L</div></div>
+        <div class="opt-compact" data-val="3750000" onclick="selectCompact('income',this)"><div class="opt-compact-label">₹25–50L</div></div>
+        <div class="opt-compact" data-val="7500000" onclick="selectCompact('income',this)"><div class="opt-compact-label">₹50L+</div></div>
+      </div>
+    </div>
+
+    <!-- Q4: Primary Goal -->
+    <div class="screen" id="screen4">
+      <div class="q-label" id="ql4">GOAL · 4 OF 8</div>
+      <div class="q-text" id="qt4">What's the main reason to buy?</div>
+      <div class="q-sub" id="qs4">This is the single most important question.</div>
+      <div class="options" id="goalOpts">
+        <div class="opt" data-val="protection" onclick="selectOpt('goal',this)">
+          <div class="opt-icon">🛡️</div>
+          <div class="opt-label" id="g1l">Protect my family</div>
+          <div class="opt-sub" id="g1s">If something happens to me, my family should be secure</div>
+        </div>
+        <div class="opt" data-val="wealth" onclick="selectOpt('goal',this)">
+          <div class="opt-icon">📈</div>
+          <div class="opt-label" id="g2l">Grow my money</div>
+          <div class="opt-sub" id="g2s">I want returns along with insurance cover</div>
+        </div>
+        <div class="opt" data-val="retirement" onclick="selectOpt('goal',this)">
+          <div class="opt-icon">🏖️</div>
+          <div class="opt-label" id="g3l">Plan for retirement</div>
+          <div class="opt-sub" id="g3s">I want a regular income after I stop working</div>
+        </div>
+        <div class="opt" data-val="child" onclick="selectOpt('goal',this)">
+          <div class="opt-icon">🎓</div>
+          <div class="opt-label" id="g4l">Secure child's future</div>
+          <div class="opt-sub" id="g4s">Education or marriage goals for my child</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q5: Risk -->
+    <div class="screen" id="screen5">
+      <div class="q-label" id="ql5">RISK · 5 OF 8</div>
+      <div class="q-text" id="qt5">How does your client feel about risk?</div>
+      <div class="q-sub" id="qs5">Be honest — this shapes the plan type recommendation.</div>
+      <div class="options" id="riskOpts">
+        <div class="opt" data-val="conservative" onclick="selectOpt('risk',this)">
+          <div class="opt-icon">🔒</div>
+          <div class="opt-label" id="r1l">Safe & guaranteed</div>
+          <div class="opt-sub" id="r1s">I want to know exactly what I'll get back. No surprises.</div>
+        </div>
+        <div class="opt" data-val="moderate" onclick="selectOpt('risk',this)">
+          <div class="opt-icon">⚖️</div>
+          <div class="opt-label" id="r2l">Mix of safety + growth</div>
+          <div class="opt-sub" id="r2s">Some guaranteed, some market-linked is fine</div>
+        </div>
+        <div class="opt" data-val="aggressive" onclick="selectOpt('risk',this)">
+          <div class="opt-icon">🚀</div>
+          <div class="opt-label" id="r3l">Willing to take risk for more returns</div>
+          <div class="opt-sub" id="r3s">Market fluctuations are okay for higher long-term gains</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q6: Sum Assured -->
+    <div class="screen" id="screen6">
+      <div class="q-label" id="ql6">COVERAGE · 6 OF 8</div>
+      <div class="q-text" id="qt6">How much cover do they need?</div>
+      <div class="q-sub" id="qs6">Choose what feels right. A good starting point is 10x their annual income.</div>
+      <div class="opts-compact" id="saOpts">
+        <div class="opt-compact" data-val="500000"   onclick="selectCompact('sa',this)"><div class="opt-compact-label">₹5L</div></div>
+        <div class="opt-compact" data-val="1000000"  onclick="selectCompact('sa',this)"><div class="opt-compact-label">₹10L</div></div>
+        <div class="opt-compact" data-val="2500000"  onclick="selectCompact('sa',this)"><div class="opt-compact-label">₹25L</div></div>
+        <div class="opt-compact" data-val="5000000"  onclick="selectCompact('sa',this)"><div class="opt-compact-label">₹50L</div></div>
+        <div class="opt-compact" data-val="7500000"  onclick="selectCompact('sa',this)"><div class="opt-compact-label">₹75L</div></div>
+        <div class="opt-compact" data-val="10000000" onclick="selectCompact('sa',this)"><div class="opt-compact-label">₹1 Cr</div></div>
+        <div class="opt-compact" data-val="15000000" onclick="selectCompact('sa',this)"><div class="opt-compact-label">₹1.5 Cr</div></div>
+        <div class="opt-compact" data-val="20000000" onclick="selectCompact('sa',this)"><div class="opt-compact-label">₹2 Cr</div></div>
+        <div class="opt-compact" data-val="30000000" onclick="selectCompact('sa',this)"><div class="opt-compact-label">₹3 Cr</div></div>
+        <div class="opt-compact" data-val="50000000" onclick="selectCompact('sa',this)"><div class="opt-compact-label">₹5 Cr+</div></div>
+      </div>
+    </div>
+
+    <!-- Q7: Premium Budget -->
+    <div class="screen" id="screen7">
+      <div class="q-label" id="ql7">BUDGET · 7 OF 8</div>
+      <div class="q-text" id="qt7">How much can they pay per year?</div>
+      <div class="q-sub" id="qs7">This filters plans to only affordable options.</div>
+      <div class="opts-compact" id="premOpts">
+        <div class="opt-compact" data-val="6000"    onclick="selectCompact('prem',this)"><div class="opt-compact-label">Up to ₹6K</div></div>
+        <div class="opt-compact" data-val="10000"   onclick="selectCompact('prem',this)"><div class="opt-compact-label">₹6–10K</div></div>
+        <div class="opt-compact" data-val="15000"   onclick="selectCompact('prem',this)"><div class="opt-compact-label">₹10–15K</div></div>
+        <div class="opt-compact" data-val="25000"   onclick="selectCompact('prem',this)"><div class="opt-compact-label">₹15–25K</div></div>
+        <div class="opt-compact" data-val="50000"   onclick="selectCompact('prem',this)"><div class="opt-compact-label">₹25–50K</div></div>
+        <div class="opt-compact" data-val="75000"   onclick="selectCompact('prem',this)"><div class="opt-compact-label">₹50–75K</div></div>
+        <div class="opt-compact" data-val="100000"  onclick="selectCompact('prem',this)"><div class="opt-compact-label">₹75K–1L</div></div>
+        <div class="opt-compact" data-val="150000"  onclick="selectCompact('prem',this)"><div class="opt-compact-label">₹1–1.5L</div></div>
+        <div class="opt-compact" data-val="250000"  onclick="selectCompact('prem',this)"><div class="opt-compact-label">₹1.5–2.5L</div></div>
+        <div class="opt-compact" data-val="500000"  onclick="selectCompact('prem',this)"><div class="opt-compact-label">₹2.5–5L</div></div>
+        <div class="opt-compact" data-val="1000000" onclick="selectCompact('prem',this)"><div class="opt-compact-label">₹5L+</div></div>
+      </div>
+    </div>
+
+    <!-- Q8: Tenure -->
+    <div class="screen" id="screen8">
+      <div class="q-label" id="ql8">TENURE · 8 OF 8</div>
+      <div class="q-text" id="qt8">How long should the policy run?</div>
+      <div class="q-sub" id="qs8">Longer tenure = more coverage, usually lower annual premium.</div>
+      <div class="opts-compact" id="tenureOpts">
+        <div class="opt-compact" data-val="7" onclick="selectCompact('tenure',this)"><div class="opt-compact-label">5–10 yrs</div><div class="opt-compact-sub">Short term</div></div>
+        <div class="opt-compact" data-val="15" onclick="selectCompact('tenure',this)"><div class="opt-compact-label">10–20 yrs</div><div class="opt-compact-sub">Medium term</div></div>
+        <div class="opt-compact" data-val="25" onclick="selectCompact('tenure',this)"><div class="opt-compact-label">20–30 yrs</div><div class="opt-compact-sub">Long term</div></div>
+        <div class="opt-compact" data-val="35" onclick="selectCompact('tenure',this)"><div class="opt-compact-label">30+ yrs</div><div class="opt-compact-sub">Whole life</div></div>
+      </div>
+    </div>
+
+    <!-- LOADING -->
+    <div class="screen" id="screenLoading">
+      <div class="loading-screen">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingText">Scoring 81 plans…</div>
+        <div class="loading-sub" id="loadingSub">Matching to client profile</div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="screen" id="screenResult">
+      <div class="result-screen" id="resultInner">
+        <!-- dynamically filled -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER NAV -->
+  <div class="footer-nav" id="footerNav" style="display:none">
+    <button class="btn btn-ghost" id="backBtn" onclick="goBack()">←</button>
+    <button class="btn btn-primary" id="nextBtn" onclick="goNext()" disabled>Continue</button>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════
+// PLAN DATABASE (81 plans)
+// ═══════════════════════════════════
+const PLANS = [{"id":"icici_iprotect_smart","name":"iProtect Smart","insurer":"ICICI Prudential Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":2500000,"max_sa":100000000,"tenure_range":[5,40],"annual_premium_approx":[8000,50000],"key_features":["Critical illness benefit","Accidental death benefit","Whole life option","Return of premium option"]},{"id":"max_smart_secure_plus","name":"Smart Secure Plus","insurer":"Max Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":2000000,"max_sa":100000000,"tenure_range":[10,50],"annual_premium_approx":[7000,45000],"key_features":["Terminal illness cover","Premium break option","Joint life option","Special exit benefit"]},{"id":"axismax_smart_term_plan_plus","name":"Smart Term Plan Plus","insurer":"Axis Max Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":2000000,"max_sa":100000000,"tenure_range":[10,50],"annual_premium_approx":[7000,45000],"key_features":["Accidental death benefit","Premium waiver on disability","Increasing cover option","Online term plan"]},{"id":"hdfc_sanchay_plus","name":"Sanchay Plus","insurer":"HDFC Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":30,"max_age":60,"min_sa":200000,"max_sa":50000000,"tenure_range":[10,45],"annual_premium_approx":[25000,500000],"key_features":["Guaranteed returns","Multiple payout options","Whole life income option","Immediate income variant"]},{"id":"icici_gift_pro","name":"ICICI Pru GIFT Pro","insurer":"ICICI Prudential Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":60,"min_sa":100000,"max_sa":50000000,"tenure_range":[5,20],"annual_premium_approx":[24000,500000],"key_features":["Guaranteed income","Lump sum + income option","Short premium paying term","Life cover throughout"]},{"id":"icici_guaranteed_income_tomorrow","name":"Guaranteed Income For Tomorrow","insurer":"ICICI Prudential Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":60,"min_sa":100000,"max_sa":50000000,"tenure_range":[5,20],"annual_premium_approx":[24000,500000],"key_features":["Guaranteed income from year 1","Multiple income options","Return of premiums","Flexible payout period"]},{"id":"hdfc_click_achieve_special","name":"Click to Achieve Special","insurer":"HDFC Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":3},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":55,"min_sa":200000,"max_sa":30000000,"tenure_range":[10,25],"annual_premium_approx":[25000,300000],"key_features":["Guaranteed maturity benefit","Milestone-based payouts","Flexible premium terms","Life cover"]},{"id":"tata_smart_sampoorna_raksha_supreme","name":"Smart Sampoorna Raksha Supreme","insurer":"Tata AIA Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":5000000,"max_sa":200000000,"tenure_range":[10,40],"annual_premium_approx":[10000,80000],"key_features":["Critical illness rider","Accidental death benefit","Whole life option","High sum assured"]},{"id":"tata_fortune_pro","name":"Fortune Pro","insurer":"Tata AIA Life","type":"ulip","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":0,"moderate":2,"aggressive":3},"min_age":18,"max_age":60,"min_sa":500000,"max_sa":50000000,"tenure_range":[10,30],"annual_premium_approx":[24000,500000],"key_features":["Market-linked returns","Multiple fund options","Partial withdrawal after 5 yrs","Loyalty additions"]},{"id":"bajaj_ace","name":"Bajaj Allianz Life ACE","insurer":"Bajaj Allianz Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":60,"min_sa":100000,"max_sa":30000000,"tenure_range":[5,20],"annual_premium_approx":[24000,500000],"key_features":["Guaranteed additions","Lump sum payout","Flexible premium terms","Life cover"]},{"id":"tata_wealth_pro","name":"Wealth Pro","insurer":"Tata AIA Life","type":"ulip","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":0,"moderate":2,"aggressive":3},"min_age":18,"max_age":60,"min_sa":500000,"max_sa":50000000,"tenure_range":[10,30],"annual_premium_approx":[24000,1000000],"key_features":["Wide fund choice","Systematic withdrawal plan","Loyalty additions","Premium redirection"]},{"id":"hdfc_sanchay_par_advantage","name":"Sanchay Par Advantage","insurer":"HDFC Life","type":"par_endowment","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":2,"moderate":3,"aggressive":1},"min_age":30,"max_age":60,"min_sa":200000,"max_sa":50000000,"tenure_range":[10,40],"annual_premium_approx":[25000,500000],"key_features":["Participating plan with bonuses","Whole life income option","Flexible payout","Bonus additions"]},{"id":"icici_signature","name":"Signature","insurer":"ICICI Prudential Life","type":"ulip","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":0,"moderate":2,"aggressive":3},"min_age":18,"max_age":60,"min_sa":500000,"max_sa":100000000,"tenure_range":[5,30],"annual_premium_approx":[100000,5000000],"key_features":["Premium ULIP","Multiple fund options","Systematic transfer plan","Wealth booster"]},{"id":"tata_sampoorna_raksha_promise","name":"Tata AIA Sampoorna Raksha Promise","insurer":"Tata AIA Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":5000000,"max_sa":200000000,"tenure_range":[10,40],"annual_premium_approx":[8000,60000],"key_features":["Comprehensive protection","Critical illness add-on","Waiver of premium","Flexible cover options"]},{"id":"hdfc_click2wealth","name":"Click 2 Wealth","insurer":"HDFC Life","type":"ulip","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":0,"moderate":2,"aggressive":3},"min_age":18,"max_age":60,"min_sa":500000,"max_sa":50000000,"tenure_range":[10,30],"annual_premium_approx":[24000,500000],"key_features":["Multiple fund options","Automatic rebalancing","Partial withdrawal","Loyalty additions"]},{"id":"icici_gold","name":"Gold","insurer":"ICICI Prudential Life","type":"ulip","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":0,"moderate":2,"aggressive":3},"min_age":18,"max_age":60,"min_sa":500000,"max_sa":50000000,"tenure_range":[5,30],"annual_premium_approx":[24000,500000],"key_features":["Wealth creation","Multiple fund options","Return booster","Loyalty additions"]},{"id":"axismax_swag_guarantee","name":"Smart Wealth Advantage Guarantee Plan","insurer":"Axis Max Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":60,"min_sa":200000,"max_sa":30000000,"tenure_range":[10,25],"annual_premium_approx":[25000,500000],"key_features":["Guaranteed lump sum","Short pay option","Life cover","Flexible benefit options"]},{"id":"icici_guaranteed_pension_flexi","name":"Guaranteed Pension Plan Flexi","insurer":"ICICI Prudential Life","type":"pension","goal_fit":{"protection":0,"wealth":1,"retirement":3,"child":0},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":30,"max_age":70,"min_sa":500000,"max_sa":50000000,"tenure_range":[5,30],"annual_premium_approx":[30000,500000],"key_features":["Guaranteed annuity","Flexible accumulation","Vesting options","Return of purchase price"]},{"id":"tata_fortune_guarantee_plus","name":"Fortune Guarantee Plus","insurer":"Tata AIA Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":60,"min_sa":200000,"max_sa":30000000,"tenure_range":[5,25],"annual_premium_approx":[25000,500000],"key_features":["Guaranteed income + lump sum","Short pay options","Life cover","Multiple variants"]},{"id":"tata_sampoorna_raksha_supreme","name":"Sampoorna Raksha Supreme","insurer":"Tata AIA Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":5000000,"max_sa":200000000,"tenure_range":[10,40],"annual_premium_approx":[8000,60000],"key_features":["Pure term protection","Critical illness option","Accidental benefit","Return of premium variant"]},{"id":"tata_guaranteed_return_insurance","name":"Guaranteed Return Insurance Plan","insurer":"Tata AIA Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":60,"min_sa":200000,"max_sa":20000000,"tenure_range":[5,20],"annual_premium_approx":[25000,300000],"key_features":["Guaranteed maturity benefit","Life cover","Flexible premium terms","Tax benefits"]},{"id":"bajaj_etouch2_life_shield","name":"eTouch II Life Shield","insurer":"Bajaj Allianz Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":2500000,"max_sa":100000000,"tenure_range":[5,40],"annual_premium_approx":[6000,50000],"key_features":["Online term plan","Accidental death benefit","Critical illness rider","Return of premium option"]},{"id":"tata_fortune_guarantee_secure","name":"Fortune Guarantee Secure","insurer":"Tata AIA Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":2,"retirement":3,"child":1},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":30,"max_age":60,"min_sa":200000,"max_sa":20000000,"tenure_range":[10,25],"annual_premium_approx":[25000,300000],"key_features":["Guaranteed income for life","Early income option","Regular income option","Life cover"]},{"id":"icici_protect_n_gain","name":"Protect N Gain","insurer":"ICICI Prudential Life","type":"term","goal_fit":{"protection":3,"wealth":1,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":1},"min_age":18,"max_age":60,"min_sa":2500000,"max_sa":100000000,"tenure_range":[10,30],"annual_premium_approx":[10000,60000],"key_features":["Term with return of premium","Guaranteed additions on survival","Critical illness option","Life cover"]},{"id":"hdfc_click2protect_life","name":"Click 2 Protect Life","insurer":"HDFC Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":2500000,"max_sa":100000000,"tenure_range":[5,40],"annual_premium_approx":[7000,50000],"key_features":["Pure term plan","Life stage protection","Critical illness add-on","Waiver of premium"]},{"id":"max_smart_secure_plus_plan","name":"Smart Secure Plus Plan","insurer":"Max Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":2000000,"max_sa":100000000,"tenure_range":[10,50],"annual_premium_approx":[7000,45000],"key_features":["Joint life option","Monthly income on death","Premium break benefit","Comprehensive term cover"]},{"id":"tata_smart_sampoorna_param_rakshak","name":"Smart Sampoorna Raksha - Param Rakshak","insurer":"Tata AIA Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":5000000,"max_sa":200000000,"tenure_range":[10,40],"annual_premium_approx":[12000,100000],"key_features":["High cover term plan","Comprehensive CI benefit","Accident & disability cover","Whole life option"]},{"id":"canara_iselect_guaranteed_future","name":"I Select Guaranteed Future","insurer":"Canara HSBC OBC","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":55,"min_sa":200000,"max_sa":20000000,"tenure_range":[5,20],"annual_premium_approx":[25000,300000],"key_features":["Guaranteed returns","Multiple plan options","Flexible payouts","Life cover"]},{"id":"tata_fortune_guarantee_pension","name":"Fortune Guarantee Pension","insurer":"Tata AIA Life","type":"pension","goal_fit":{"protection":0,"wealth":1,"retirement":3,"child":0},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":30,"max_age":70,"min_sa":500000,"max_sa":50000000,"tenure_range":[5,30],"annual_premium_approx":[30000,1000000],"key_features":["Guaranteed annuity rates","Deferred and immediate options","Joint life annuity","Return of purchase price"]},{"id":"bajaj_assured_wealth_goal_platinum","name":"Assured Wealth Goal Platinum","insurer":"Bajaj Allianz Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":60,"min_sa":200000,"max_sa":30000000,"tenure_range":[5,20],"annual_premium_approx":[50000,1000000],"key_features":["High guaranteed returns","Short premium term","Lump sum payout","Life cover"]},{"id":"hdfc_click2invest","name":"Click 2 Invest","insurer":"HDFC Life","type":"ulip","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":0,"moderate":2,"aggressive":3},"min_age":18,"max_age":60,"min_sa":500000,"max_sa":50000000,"tenure_range":[5,30],"annual_premium_approx":[24000,500000],"key_features":["Zero premium allocation charge","Multiple funds","Partial withdrawals","Loyalty additions"]},{"id":"hdfc_c2p_super","name":"C2P Super","insurer":"HDFC Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":2500000,"max_sa":100000000,"tenure_range":[5,40],"annual_premium_approx":[7000,50000],"key_features":["Comprehensive protection","Critical illness cover","Life stage protection","Increasing cover"]},{"id":"aditya_nishchit_aayush","name":"ABSLI Nishchit Aayush Plan","insurer":"Aditya Birla Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":60,"min_sa":200000,"max_sa":20000000,"tenure_range":[5,20],"annual_premium_approx":[25000,500000],"key_features":["Guaranteed income","Flexible payout options","Short premium term","Life cover"]},{"id":"max_smart_total_elite","name":"Smart Total Elite Protection","insurer":"Max Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":5000000,"max_sa":200000000,"tenure_range":[10,50],"annual_premium_approx":[15000,150000],"key_features":["Comprehensive CI cover","Disability benefit","High SA option","Waiver of premium"]},{"id":"tata_smart_sampoorna_pro","name":"Smart Sampoorna Raksha Pro","insurer":"Tata AIA Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":5000000,"max_sa":200000000,"tenure_range":[10,40],"annual_premium_approx":[10000,70000],"key_features":["Comprehensive term","Multiple rider options","Whole life cover","Increasing SA option"]},{"id":"tata_maha_raksha_supreme_select","name":"Maha Raksha Supreme - Select","insurer":"Tata AIA Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":5000000,"max_sa":500000000,"tenure_range":[10,40],"annual_premium_approx":[12000,120000],"key_features":["Ultra high SA","Comprehensive CI","Accident benefit","Whole life option"]},{"id":"icici_assured_savings","name":"ICICI Pru Assured Savings Insurance Plan","insurer":"ICICI Prudential Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":1,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":55,"min_sa":200000,"max_sa":10000000,"tenure_range":[5,15],"annual_premium_approx":[25000,200000],"key_features":["Guaranteed savings","Short premium paying term","Maturity benefit","Life cover"]},{"id":"hdfc_guaranteed_wealth_plus","name":"HDFC Life Guaranteed Wealth Plus","insurer":"HDFC Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":60,"min_sa":200000,"max_sa":30000000,"tenure_range":[5,20],"annual_premium_approx":[25000,500000],"key_features":["Guaranteed wealth creation","Lump sum payout","Flexible premium terms","Life cover"]},{"id":"hdfc_click2protect_super","name":"Click 2 Protect Super Life","insurer":"HDFC Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":2500000,"max_sa":100000000,"tenure_range":[5,40],"annual_premium_approx":[7000,55000],"key_features":["Income replacement option","Increasing SA","Critical illness add-on","Pure term"]},{"id":"tata_sampoorna_raksha_supreme_trop","name":"Sampoorna Raksha Supreme - TROP","insurer":"Tata AIA Life","type":"term","goal_fit":{"protection":3,"wealth":1,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":1},"min_age":18,"max_age":60,"min_sa":5000000,"max_sa":200000000,"tenure_range":[10,30],"annual_premium_approx":[12000,80000],"key_features":["100% premium back on survival","Term with return of premium","Life cover","Accidental benefit"]},{"id":"hdfc_sanchay_fmp","name":"Sanchay FMP","insurer":"HDFC Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":60,"min_sa":200000,"max_sa":30000000,"tenure_range":[5,15],"annual_premium_approx":[25000,500000],"key_features":["Fixed maturity plan","Guaranteed lump sum","Short investment horizon","Life cover"]},{"id":"bajaj_magnum_fortune_plus","name":"Magnum Fortune Plus","insurer":"Bajaj Allianz Life","type":"ulip","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":0,"moderate":2,"aggressive":3},"min_age":18,"max_age":60,"min_sa":500000,"max_sa":50000000,"tenure_range":[10,30],"annual_premium_approx":[24000,500000],"key_features":["ULIP with loyalty additions","Multiple funds","Partial withdrawals","Auto rebalancing"]},{"id":"aditya_assured_saving","name":"Assured Saving Plan","insurer":"Aditya Birla Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":1,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":55,"min_sa":100000,"max_sa":10000000,"tenure_range":[5,15],"annual_premium_approx":[25000,200000],"key_features":["Guaranteed savings plan","Multiple options","Short term","Life cover"]},{"id":"hdfc_smart_protect_level","name":"HDFC Life Smart Protect Plan","insurer":"HDFC Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":2500000,"max_sa":100000000,"tenure_range":[5,40],"annual_premium_approx":[7000,50000],"key_features":["Level cover term","Capital guarantee variant","Critical illness add-on","Flexible payout"]},{"id":"hdfc_saral_jeevan","name":"Saral Jeevan","insurer":"HDFC Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":500000,"max_sa":2500000,"tenure_range":[5,40],"annual_premium_approx":[3000,15000],"key_features":["Simple standard term plan","Easy issuance","Basic life cover","Affordable premiums"]},{"id":"axismax_swag_growth_par","name":"Smart Wealth Advantage Growth Par Plan","insurer":"Axis Max Life","type":"par_endowment","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":2,"moderate":3,"aggressive":1},"min_age":18,"max_age":55,"min_sa":200000,"max_sa":20000000,"tenure_range":[10,25],"annual_premium_approx":[25000,300000],"key_features":["Participating plan","Bonuses + guaranteed additions","Flexible payouts","Life cover"]},{"id":"bajaj_assured_wealth_goal","name":"Assured Wealth Goal","insurer":"Bajaj Allianz Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":1,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":55,"min_sa":200000,"max_sa":20000000,"tenure_range":[5,20],"annual_premium_approx":[25000,300000],"key_features":["Guaranteed wealth creation","Multiple payout options","Short premium term","Life cover"]},{"id":"hdfc_sampoorn_nivesh","name":"Sampoorn Nivesh","insurer":"HDFC Life","type":"ulip","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":0,"moderate":2,"aggressive":3},"min_age":18,"max_age":60,"min_sa":500000,"max_sa":50000000,"tenure_range":[10,30],"annual_premium_approx":[24000,500000],"key_features":["Diversified ULIP","Multiple fund options","Partial withdrawals","Wealth booster"]},{"id":"tata_fortune_guarantee_supreme","name":"Fortune Guarantee Supreme","insurer":"Tata AIA Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":60,"min_sa":200000,"max_sa":30000000,"tenure_range":[5,25],"annual_premium_approx":[50000,1000000],"key_features":["Premium guaranteed plan","High returns","Flexible options","Life cover"]},{"id":"icici_gift_long_term","name":"Guaranteed Income For Tomorrow: Long Term","insurer":"ICICI Prudential Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":2,"retirement":3,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":55,"min_sa":200000,"max_sa":20000000,"tenure_range":[15,30],"annual_premium_approx":[25000,300000],"key_features":["Long term income","Guaranteed payout","Life cover","Return of premium option"]},{"id":"hdfc_click_achieve","name":"Click to Achieve","insurer":"HDFC Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":3},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":55,"min_sa":200000,"max_sa":20000000,"tenure_range":[10,25],"annual_premium_approx":[25000,300000],"key_features":["Goal-based savings","Guaranteed maturity","Milestone payouts","Life cover"]},{"id":"pnb_mera_term_plus","name":"Mera Term Plan Plus","insurer":"PNB Metlife","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":2500000,"max_sa":100000000,"tenure_range":[5,40],"annual_premium_approx":[6000,50000],"key_features":["Critical illness benefit","Accidental cover","Waiver of premium","Comprehensive term"]},{"id":"bajaj_smart_protect_goal","name":"Smart Protect Goal","insurer":"Bajaj Allianz Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":2500000,"max_sa":100000000,"tenure_range":[5,40],"annual_premium_approx":[6000,50000],"key_features":["Online term plan","Accidental death","Critical illness rider","Return of premium option"]},{"id":"max_online_saving","name":"Online Saving Plan","insurer":"Max Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":3},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":55,"min_sa":200000,"max_sa":20000000,"tenure_range":[10,25],"annual_premium_approx":[25000,300000],"key_features":["Online savings plan","Guaranteed benefits","Child solution variant","Life cover"]},{"id":"hdfc_click2protect_supreme","name":"Click 2 Protect Supreme","insurer":"HDFC Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":2500000,"max_sa":100000000,"tenure_range":[5,40],"annual_premium_approx":[7000,55000],"key_features":["Supreme protection plan","Income benefit option","Critical illness","Return of premium variant"]},{"id":"hdfc_sanchay_fmp_capital","name":"Sanchay FMP (Capital Guarantee)","insurer":"HDFC Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":1,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":60,"min_sa":200000,"max_sa":30000000,"tenure_range":[5,15],"annual_premium_approx":[25000,500000],"key_features":["Capital guaranteed plan","Fixed maturity","Guaranteed returns","Life cover"]},{"id":"icici_futureperfect","name":"FUTUREPERFECT","insurer":"ICICI Prudential Life","type":"ulip","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":0,"moderate":2,"aggressive":3},"min_age":18,"max_age":60,"min_sa":500000,"max_sa":50000000,"tenure_range":[5,30],"annual_premium_approx":[24000,500000],"key_features":["Future wealth plan","Multiple funds","Loyalty additions","Partial withdrawals"]},{"id":"kotak_eterm","name":"Kotak e-Term Plan","insurer":"Kotak Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":2500000,"max_sa":100000000,"tenure_range":[5,40],"annual_premium_approx":[6000,50000],"key_features":["Online term plan","Affordable premiums","Critical illness rider","Life stage increase"]},{"id":"max_smart_wealth_plan","name":"Smart Wealth Plan","insurer":"Max Life","type":"ulip","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":0,"moderate":2,"aggressive":3},"min_age":18,"max_age":60,"min_sa":500000,"max_sa":50000000,"tenure_range":[10,30],"annual_premium_approx":[24000,1000000],"key_features":["Wealth creation ULIP","Multiple fund options","Systematic withdrawal","Loyalty additions"]},{"id":"tata_smart_value_income","name":"Smart Value Income Plan","insurer":"Tata AIA Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":2,"retirement":3,"child":1},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":30,"max_age":60,"min_sa":200000,"max_sa":20000000,"tenure_range":[10,25],"annual_premium_approx":[25000,300000],"key_features":["Regular income plan","Guaranteed payouts","Life cover","Flexible payout period"]},{"id":"bandhan_aegon_iterm_prime","name":"Aegon Life iTerm Prime","insurer":"Bandhan Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":2500000,"max_sa":100000000,"tenure_range":[5,40],"annual_premium_approx":[5000,40000],"key_features":["Affordable term plan","Accidental death benefit","Critical illness rider","Online purchase"]},{"id":"bajaj_etouch_term","name":"eTouch Term","insurer":"Bajaj Allianz Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":2500000,"max_sa":100000000,"tenure_range":[5,40],"annual_premium_approx":[5000,40000],"key_features":["Pure online term","Affordable premiums","Accidental benefit option","Simple coverage"]},{"id":"icici_iprotect_smart_plus","name":"iProtect Smart Plus","insurer":"ICICI Prudential Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":2500000,"max_sa":100000000,"tenure_range":[5,40],"annual_premium_approx":[10000,70000],"key_features":["Enhanced term plan","Comprehensive CI cover","Disability benefit","Whole life option"]},{"id":"tata_maha_raksha_supreme","name":"Maha Raksha Supreme","insurer":"Tata AIA Life","type":"term","goal_fit":{"protection":3,"wealth":0,"retirement":0,"child":1},"risk_fit":{"conservative":3,"moderate":3,"aggressive":2},"min_age":18,"max_age":65,"min_sa":5000000,"max_sa":500000000,"tenure_range":[10,40],"annual_premium_approx":[12000,150000],"key_features":["High sum assured","CI + disability cover","Whole life option","Premium waiver"]},{"id":"hdfc_guaranteed_pension","name":"Guaranteed Pension Plan","insurer":"HDFC Life","type":"pension","goal_fit":{"protection":0,"wealth":1,"retirement":3,"child":0},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":30,"max_age":75,"min_sa":500000,"max_sa":50000000,"tenure_range":[5,30],"annual_premium_approx":[30000,1000000],"key_features":["Guaranteed annuity","Deferred/immediate option","Joint life option","Return of purchase price"]},{"id":"axismax_max_smart_annuity","name":"Max Life Smart Wealth Annuity Guaranteed Pension Plan","insurer":"Axis Max Life","type":"pension","goal_fit":{"protection":0,"wealth":1,"retirement":3,"child":0},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":30,"max_age":80,"min_sa":500000,"max_sa":100000000,"tenure_range":[5,30],"annual_premium_approx":[50000,2000000],"key_features":["Guaranteed annuity","Multiple annuity options","Joint life","High SA variant"]},{"id":"bajaj_life_guaranteed_income_goal","name":"Life Guaranteed Income Goal","insurer":"Bajaj Allianz Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":2,"retirement":3,"child":1},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":25,"max_age":60,"min_sa":200000,"max_sa":30000000,"tenure_range":[10,30],"annual_premium_approx":[50000,2000000],"key_features":["Guaranteed income for life","Flexibility in payout start","Life cover","Return of premium"]},{"id":"bajaj_future_wealth_gain","name":"Future Wealth Gain","insurer":"Bajaj Allianz Life","type":"ulip","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":0,"moderate":2,"aggressive":3},"min_age":18,"max_age":60,"min_sa":500000,"max_sa":50000000,"tenure_range":[10,30],"annual_premium_approx":[24000,500000],"key_features":["Wealth creation ULIP","Multiple funds","Loyalty additions","Partial withdrawals"]},{"id":"icici_gift_select","name":"ICICI Pru GIFT Select","insurer":"ICICI Prudential Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":60,"min_sa":100000,"max_sa":50000000,"tenure_range":[5,20],"annual_premium_approx":[24000,500000],"key_features":["Customizable income plan","Lump sum + income","Short premium pay term","Life cover"]},{"id":"max_smart_wealth_annuity","name":"Max Life Smart Wealth Annuity Guaranteed Pension Plan","insurer":"Max Life","type":"pension","goal_fit":{"protection":0,"wealth":1,"retirement":3,"child":0},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":30,"max_age":80,"min_sa":500000,"max_sa":50000000,"tenure_range":[5,30],"annual_premium_approx":[50000,2000000],"key_features":["Guaranteed annuity","Flexible annuity options","Joint life cover","Return of corpus"]},{"id":"tata_fortune_guarantee_secure_early","name":"Fortune Guarantee Secure - Early Income Plus","insurer":"Tata AIA Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":2,"retirement":3,"child":1},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":30,"max_age":60,"min_sa":200000,"max_sa":20000000,"tenure_range":[10,25],"annual_premium_approx":[25000,300000],"key_features":["Early income start","Guaranteed payout","Life cover","Lump sum option"]},{"id":"icici_guaranteed_pension_goal","name":"Guaranteed Pension Goal","insurer":"Bajaj Allianz Life","type":"pension","goal_fit":{"protection":0,"wealth":1,"retirement":3,"child":0},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":30,"max_age":70,"min_sa":500000,"max_sa":30000000,"tenure_range":[5,30],"annual_premium_approx":[30000,500000],"key_features":["Guaranteed pension","Multiple annuity options","Joint life cover","Flexible deferment"]},{"id":"sbi_smart_platina_plus","name":"Smart Platina Plus","insurer":"SBI Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":2,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":60,"min_sa":200000,"max_sa":20000000,"tenure_range":[5,20],"annual_premium_approx":[25000,300000],"key_features":["Guaranteed income plan","Regular payout","Life cover","Short premium term"]},{"id":"max_online_savings_child","name":"Online Savings Plan Child Solution","insurer":"Max Life","type":"child","goal_fit":{"protection":1,"wealth":2,"retirement":0,"child":3},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":50,"min_sa":200000,"max_sa":10000000,"tenure_range":[10,25],"annual_premium_approx":[25000,200000],"key_features":["Child education plan","Waiver of premium on death","Guaranteed maturity","Milestone payouts"]},{"id":"sbi_smart_scholar_plus","name":"Smart Scholar Plus","insurer":"SBI Life","type":"child","goal_fit":{"protection":1,"wealth":2,"retirement":0,"child":3},"risk_fit":{"conservative":1,"moderate":3,"aggressive":2},"min_age":18,"max_age":57,"min_sa":500000,"max_sa":50000000,"tenure_range":[8,25],"annual_premium_approx":[25000,300000],"key_features":["ULIP-based child plan","Waiver of premium","Milestone payouts","Multiple fund options"]},{"id":"digit_glow_plus","name":"Digit Glow Plus","insurer":"Digit Life","type":"guaranteed","goal_fit":{"protection":1,"wealth":3,"retirement":1,"child":2},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":55,"min_sa":200000,"max_sa":15000000,"tenure_range":[5,15],"annual_premium_approx":[15000,200000],"key_features":["Guaranteed savings","Short term plan","Life cover","Simple purchase"]},{"id":"shriram_super_income","name":"Super Income Plan","insurer":"Shriram Life Insurance","type":"guaranteed","goal_fit":{"protection":1,"wealth":2,"retirement":2,"child":1},"risk_fit":{"conservative":3,"moderate":2,"aggressive":0},"min_age":18,"max_age":55,"min_sa":100000,"max_sa":10000000,"tenure_range":[5,20],"annual_premium_approx":[15000,150000],"key_features":["Regular income","Guaranteed payouts","Life cover","Affordable plan"]}];
+
+// ═══════════════════════════════════
+// TRANSLATIONS
+// ═══════════════════════════════════
+const T = {
+  en: {
+    topSub:"Life Insurance Finder", topSubWelcome:"Life Insurance Recommender", wb1:"POSP Agent Tool",
+    wt1:"Find the <span>right plan</span><br>for your client",
+    wd1:"Answer 8 quick questions while talking to your client. We'll score 81 plans and show your top 3 matches with reasons.",
+    ws1:"Plans scored", ws2:"Insurers", ws3:"To results",
+    wstep1:"Enter client profile (age, income, goal)", wstep2:"Get top 3 matched plans instantly", wstep3:"Share summary to client on WhatsApp",
+    startBtn:"Start for new client →",
+    ql1:"CLIENT DETAILS · 1 OF 8", qt1:"What's your client's name?", qs1:"This personalises the recommendation and WhatsApp message.",
+    ql2:"AGE · 2 OF 8", qt2:"How old is your client?", qs2:"Age determines which plans they're eligible for.",
+    ageSubA:"Young adult", ageSubB:"Prime earning", ageSubC:"Mid career", ageSubD:"Pre-retirement", ageSubE:"Senior",
+    ql3:"INCOME · 3 OF 8", qt3:"What is the annual income?", qs3:"This helps us suggest the right cover amount for your client.",
+    ql4:"GOAL · 4 OF 8", qt4:"What's the main reason to buy?", qs4:"This is the single most important question.",
+    g1l:"Protect my family", g1s:"If something happens to me, my family should be secure",
+    g2l:"Grow my money", g2s:"I want returns along with insurance cover",
+    g3l:"Plan for retirement", g3s:"I want a regular income after I stop working",
+    g4l:"Secure child's future", g4s:"Education or marriage goals for my child",
+    ql5:"RISK · 5 OF 8", qt5:"How does your client feel about risk?", qs5:"Be honest — this shapes the plan type recommendation.",
+    r1l:"Safe & guaranteed", r1s:"I want to know exactly what I'll get back. No surprises.",
+    r2l:"Mix of safety + growth", r2s:"Some guaranteed, some market-linked is fine",
+    r3l:"Willing to take risk for more returns", r3s:"Market fluctuations are okay for higher long-term gains",
+    ql6:"COVERAGE · 6 OF 8", qt6:"How much cover do they need?", qs6:"Rule of thumb: at least 10× annual income is ideal.",
+    ql7:"BUDGET · 7 OF 8", qt7:"How much can they pay per year?", qs7:"This filters plans to only affordable options.",
+    ql8:"TENURE · 8 OF 8", qt8:"How long should the policy run?", qs8:"Longer tenure = more coverage, usually lower annual premium.",
+    loadingText:"Scoring 81 plans…", loadingSub:"Matching to client profile",
+    continueBtn:"Continue", backBtn:"←",
+    waBtn:"Share on WhatsApp",
+    resetBtn:"Start new client",
+    recommendedFor:"Recommended for",
+    planCount:"plans recommended",
+    bestMatch:"Best match",
+    altMatch:"Alternative",
+    matchLabel:"match",
+    whyTitle:"Why this plan?",
+    featTitle:"Key features",
+    irrLabel:"Est. Returns",
+    irrGuaranteed:"6 - 7% p.a.", irrPar:"5.5 - 6.5% p.a.", irrPension:"5.5 - 6.5% p.a.", irrUlip:"10 - 14% p.a.",
+    irrNote:"Indicative only. Actual returns depend on plan variant and term.",
+    irrUlipNote:"Market-linked. Past performance is not indicative of future returns.",
+    swipeHint:"← Swipe for alternatives →",
+    goalLabels:{protection:"Family Protection",wealth:"Wealth Creation",retirement:"Retirement Planning",child:"Child's Future"},
+    riskLabels:{conservative:"Conservative",moderate:"Moderate",aggressive:"Aggressive"},
+    typeLabels:{term:"Term Plan",guaranteed:"Guaranteed Plan",ulip:"ULIP",pension:"Pension Plan",par_endowment:"Par Endowment",child:"Child Plan"},
+    checks:{goalFit:"Goal match",withinBudget:"Within budget",riskMatch:"Risk match",tenureMatch:"Tenure match"},
+    scriptLines: (name,plan,goal,risk) => [
+      `"${name} ji, based on your goal of ${goal} and ${risk} risk preference, this plan is the best fit from our analysis of 81 plans."`,
+      `"${plan.insurer} is one of India's leading insurers. This plan gives you ${plan.type==='term'?'high life cover at low cost':plan.type==='guaranteed'?'guaranteed returns — your money is 100% safe':plan.type==='ulip'?'market-linked growth with life cover':'regular income for your retirement'}."`,
+      `"You pay the premium regularly, and your family is protected. ${plan.type==='guaranteed'?'You also get guaranteed money back at maturity.':plan.type==='term'?'The premium is very affordable for the cover you get.':''}"`
+    ]
+  },
+  hi: {
+    topSub:"जीवन बीमा खोजक", topSubWelcome:"जीवन बीमा सिफारिश टूल", wb1:"POSP एजेंट टूल",
+    wt1:"अपने ग्राहक के लिए <span>सही प्लान</span><br>खोजें",
+    wd1:"ग्राहक से बात करते हुए 8 सवालों के जवाब दें। हम 81 प्लान को स्कोर करके आपके लिए सर्वश्रेष्ठ 3 प्लान और कारण दिखाएंगे।",
+    ws1:"प्लान स्कोर किए", ws2:"बीमा कंपनियाँ", ws3:"नतीजे तक",
+    wstep1:"ग्राहक की जानकारी भरें (उम्र, आय, लक्ष्य)", wstep2:"तुरंत टॉप 3 मैच प्लान पाएं", wstep3:"WhatsApp पर ग्राहक को शेयर करें",
+    startBtn:"नए ग्राहक के लिए शुरू करें →",
+    ql1:"ग्राहक विवरण · 1/8", qt1:"ग्राहक का नाम क्या है?", qs1:"यह सिफारिश और WhatsApp संदेश को व्यक्तिगत बनाता है।",
+    ql2:"उम्र · 2/8", qt2:"ग्राहक की उम्र कितनी है?", qs2:"उम्र से पता चलता है कि कौन से प्लान के लिए पात्र हैं।",
+    ageSubA:"युवा", ageSubB:"मुख्य कमाई", ageSubC:"मध्य करियर", ageSubD:"सेवानिवृत्ति से पहले", ageSubE:"वरिष्ठ",
+    ql3:"आय · 3/8", qt3:"वार्षिक आय कितनी है?", qs3:"इससे हम आपके ग्राहक के लिए सही बीमा राशि सुझा सकते हैं।",
+    ql4:"लक्ष्य · 4/8", qt4:"खरीदने का मुख्य कारण क्या है?", qs4:"यह सबसे महत्वपूर्ण सवाल है।",
+    g1l:"परिवार की सुरक्षा", g1s:"अगर मुझे कुछ हो जाए तो मेरा परिवार सुरक्षित रहे",
+    g2l:"पैसा बढ़ाना", g2s:"मुझे बीमा के साथ रिटर्न भी चाहिए",
+    g3l:"रिटायरमेंट की योजना", g3s:"काम बंद होने के बाद नियमित आय चाहिए",
+    g4l:"बच्चे का भविष्य", g4s:"बच्चे की पढ़ाई या शादी के लिए बचत",
+    ql5:"जोखिम · 5/8", qt5:"ग्राहक जोखिम के बारे में क्या सोचते हैं?", qs5:"ईमानदारी से जवाब दें — यह प्लान का प्रकार तय करता है।",
+    r1l:"सुरक्षित और गारंटीड", r1s:"मुझे पता होना चाहिए कि मुझे क्या मिलेगा। कोई आश्चर्य नहीं।",
+    r2l:"सुरक्षा और विकास का मिश्रण", r2s:"कुछ गारंटीड, कुछ बाजार से जुड़ा ठीक है",
+    r3l:"ज्यादा रिटर्न के लिए जोखिम लेने को तैयार", r3s:"ज्यादा लाभ के लिए बाजार में उतार-चढ़ाव ठीक है",
+    ql6:"बीमा राशि · 6/8", qt6:"कितनी कवरेज चाहिए?", qs6:"नियम: कम से कम वार्षिक आय का 10 गुना आदर्श है।",
+    ql7:"बजट · 7/8", qt7:"साल में कितना प्रीमियम दे सकते हैं?", qs7:"यह केवल किफायती प्लान दिखाता है।",
+    ql8:"अवधि · 8/8", qt8:"पॉलिसी कितने साल चलनी चाहिए?", qs8:"लंबी अवधि = ज्यादा कवरेज, आमतौर पर कम प्रीमियम।",
+    loadingText:"81 प्लान स्कोर हो रहे हैं…", loadingSub:"ग्राहक प्रोफाइल से मिला रहे हैं",
+    continueBtn:"जारी रखें", backBtn:"←",
+    waBtn:"WhatsApp पर शेयर करें",
+    resetBtn:"नया ग्राहक शुरू करें",
+    recommendedFor:"के लिए सिफारिश",
+    planCount:"प्लान सुझाए गए",
+    bestMatch:"सर्वश्रेष्ठ मैच",
+    altMatch:"विकल्प",
+    matchLabel:"मिलान",
+    whyTitle:"यह प्लान क्यों?",
+    featTitle:"मुख्य विशेषताएं",
+    irrLabel:"अनुमानित रिटर्न",
+    irrGuaranteed:"6 - 7% प्रति वर्ष", irrPar:"5.5 - 6.5% प्रति वर्ष", irrPension:"5.5 - 6.5% प्रति वर्ष", irrUlip:"10 - 14% प्रति वर्ष",
+    irrNote:"केवल सांकेतिक। वास्तविक रिटर्न प्लान और अवधि पर निर्भर करता है।",
+    irrUlipNote:"बाजार से जुड़ा। पिछला प्रदर्शन भविष्य के रिटर्न का संकेत नहीं है।",
+    swipeHint:"← विकल्पों के लिए स्वाइप करें →",
+    goalLabels:{protection:"परिवार सुरक्षा",wealth:"धन वृद्धि",retirement:"सेवानिवृत्ति योजना",child:"बच्चे का भविष्य"},
+    riskLabels:{conservative:"रूढ़िवादी",moderate:"मध्यम",aggressive:"आक्रामक"},
+    typeLabels:{term:"टर्म प्लान",guaranteed:"गारंटीड प्लान",ulip:"यूलिप",pension:"पेंशन प्लान",par_endowment:"पार एंडाउमेंट",child:"चाइल्ड प्लान"},
+    checks:{goalFit:"लक्ष्य मैच",withinBudget:"बजट में",riskMatch:"जोखिम मैच",tenureMatch:"अवधि मैच"},
+    scriptLines: (name,plan,goal,risk) => [
+      `"${name} जी, आपके ${goal} के लक्ष्य और ${risk} जोखिम प्रोफाइल के आधार पर, 81 प्लान में से यह सबसे अच्छा मैच है।"`,
+      `"${plan.insurer} भारत की अग्रणी बीमा कंपनियों में से एक है। यह प्लान आपको ${plan.type==='term'?'कम लागत पर उच्च जीवन बीमा देता है':plan.type==='guaranteed'?'गारंटीड रिटर्न देता है — आपका पैसा 100% सुरक्षित है':plan.type==='ulip'?'बाजार से जुड़ी वृद्धि के साथ जीवन बीमा देता है':'सेवानिवृत्ति के लिए नियमित आय देता है'}।"`,
+      `"आप नियमित प्रीमियम भरते हैं और आपका परिवार सुरक्षित रहता है। ${plan.type==='guaranteed'?'मैच्योरिटी पर आपको गारंटीड पैसे भी वापस मिलते हैं।':plan.type==='term'?'जितना कवर मिलता है उसके लिए प्रीमियम बहुत किफायती है।':''}"`
+    ]
+  }
+};
+
+// ═══════════════════════════════════
+// STATE & FLOW
+// ═══════════════════════════════════
+let lang = 'en';
+let currentScreen = 'welcome';
+const SCREENS = ['welcome','1','2','3','4','5','6','7','8','loading','result'];
+const state = { name:'', age:null, income:null, goal:null, risk:null, sa:null, prem:null, tenure:null };
+
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.textContent.trim()===(l==='en'?'EN':'हि')));
+  applyTranslations();
+}
+
+function applyTranslations() {
+  const t = T[lang];
+  Object.keys(t).forEach(k => {
+    const el = document.getElementById(k);
+    if(el && typeof t[k]==='string') el.innerHTML = t[k];
+  });
+  document.getElementById('nextBtn').textContent = t.continueBtn;
+}
+
+function selectOpt(key, el) {
+  const group = el.closest('.options');
+  group.querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  state[key] = el.dataset.val;
+  document.getElementById('nextBtn').disabled = false;
+}
+
+function selectCompact(key, el) {
+  const group = el.closest('.opts-compact');
+  group.querySelectorAll('.opt-compact').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  state[key] = parseFloat(el.dataset.val);
+  document.getElementById('nextBtn').disabled = false;
+}
+
+function validateName() {
+  const v = document.getElementById('clientName').value.trim();
+  state.name = v;
+  document.getElementById('nextBtn').disabled = v.length < 2;
+}
+
+function startFlow() {
+  document.getElementById('footerNav').style.display = 'flex';
+  document.getElementById('progressShell').style.display = 'block';
+  navigateTo('1');
+}
+
+function navigateTo(id) {
+  const prev = document.getElementById('screen' + (currentScreen==='welcome'?'Welcome':currentScreen));
+  if(prev) { prev.classList.remove('active'); prev.classList.add('exit-left'); setTimeout(()=>prev.classList.remove('exit-left'),350); }
+
+  currentScreen = id;
+  const next = document.getElementById('screen'+id);
+  if(next) { next.classList.add('active'); }
+
+  const stepNum = parseInt(id);
+  if(!isNaN(stepNum)) {
+    document.getElementById('stepLabel').textContent = `${T[lang].ql1?.split('·')[0]?.trim()||'Step'} ${stepNum} / 8`;
+    document.getElementById('stepName').textContent = getStepName(stepNum);
+    document.getElementById('progressFill').style.width = (stepNum/8*100)+'%';
+  }
+
+  // Reset next button
+  const btn = document.getElementById('nextBtn');
+  btn.disabled = shouldDisable(id);
+  document.getElementById('backBtn').style.visibility = 'visible';
+  if(id==='loading' || id==='result') {
+    document.getElementById('footerNav').style.display='none';
+    document.getElementById('progressShell').style.display='none';
+    document.querySelector('.topbar').style.display = (id==='result') ? 'none' : '';
+  } else {
+    document.getElementById('footerNav').style.display='flex';
+    document.getElementById('progressShell').style.display='block';
+    document.querySelector('.topbar').style.display='';
+  }
+}
+
+function getStepName(n) {
+  const names = {en:['Name','Age','Income','Goal','Risk','Coverage','Budget','Tenure'], hi:['नाम','उम्र','आय','लक्ष्य','जोखिम','कवरेज','बजट','अवधि']};
+  return (names[lang]||names.en)[n-1]||'';
+}
+
+function shouldDisable(id) {
+  if(id==='1') return (state.name||'').length < 2;
+  if(id==='2') return state.age===null;
+  if(id==='3') return state.income===null;
+  if(id==='4') return state.goal===null;
+  if(id==='5') return state.risk===null;
+  if(id==='6') return state.sa===null;
+  if(id==='7') return state.prem===null;
+  if(id==='8') return state.tenure===null;
+  return false;
+}
+
+function goNext() {
+  const n = parseInt(currentScreen);
+  if(n < 8) { navigateTo(String(n+1)); }
+  else if(currentScreen==='8') { runEngine(); }
+}
+
+function goBack() {
+  const n = parseInt(currentScreen);
+  if(n > 1) navigateTo(String(n-1));
+  else {
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active','exit-left'));
+    currentScreen = 'welcome';
+    document.getElementById('screenWelcome').classList.add('active');
+    document.getElementById('footerNav').style.display='none';
+    document.getElementById('progressShell').style.display='none';
+  }
+}
+
+// ═══════════════════════════════════
+// SCORING ENGINE
+// ═══════════════════════════════════
+const WEIGHTS = {goal_fit:1.3, affordability:1.2, sa_adequacy:1.0, tenure_fit:0.8, risk_fit:0.7};
+
+function scorePlan(plan, p) {
+  if(p.age < plan.min_age || p.age > plan.max_age) return null;
+  if(plan.type==='pension' && p.age < 30) return null;
+  if(p.sa > plan.max_sa) return null;
+
+  const gf = plan.goal_fit[p.goal]||0;
+  const [pMin] = plan.annual_premium_approx;
+  let aff = 0;
+  if(p.prem >= pMin) {
+    const ratio = p.prem/p.income;
+    if(ratio<=0.08) aff=3; else if(ratio<=0.15) aff=2; else if(ratio<=0.25) aff=1;
+  }
+  const hlv = p.sa/p.income;
+  let sa = hlv>=15?3:hlv>=10?2:hlv>=5?1:0;
+  if(plan.type==='pension') sa=2;
+  if(plan.type==='child') sa=Math.max(sa,1);
+
+  const [tMin,tMax] = plan.tenure_range;
+  const tenDiff = p.tenure>=tMin&&p.tenure<=tMax ? 0 : Math.min(Math.abs(p.tenure-tMin),Math.abs(p.tenure-tMax));
+  const ten = tenDiff<=5?3:tenDiff<=10?2:tenDiff<=15?1:0;
+
+  const rf = plan.risk_fit[p.risk]||0;
+  const total = gf*WEIGHTS.goal_fit + aff*WEIGHTS.affordability + sa*WEIGHTS.sa_adequacy + ten*WEIGHTS.tenure_fit + rf*WEIGHTS.risk_fit;
+  const maxScore = 3*(WEIGHTS.goal_fit+WEIGHTS.affordability+WEIGHTS.sa_adequacy+WEIGHTS.tenure_fit+WEIGHTS.risk_fit);
+  const pct = Math.round(total/maxScore*100);
+
+  const checks = [];
+  const t = T[lang];
+  if(gf>=2) checks.push(t.checks.goalFit);
+  if(aff>=2) checks.push(t.checks.withinBudget);
+  if(rf>=2) checks.push(t.checks.riskMatch);
+  if(ten>=2) checks.push(t.checks.tenureMatch);
+
+  return {plan, gf, aff, sa, ten, rf, total:Math.round(total*10)/10, pct, checks};
+}
+
+function runEngine() {
+  navigateTo('loading');
+  const p = {
+    age: state.age, income: state.income, goal: state.goal, risk: state.risk,
+    sa: state.sa, prem: state.prem, tenure: state.tenure
+  };
+  setTimeout(()=>{
+    const results = PLANS.map(pl=>scorePlan(pl,p)).filter(Boolean).sort((a,b)=>b.total-a.total).slice(0,3);
+    buildResults(results);
+    navigateTo('result');
+    document.getElementById('screenResult').classList.add('active');
+  }, 1200);
+}
+
+// ═══════════════════════════════════
+// RESULT BUILDER
+// ═══════════════════════════════════
+const INS_COLORS = ['ins-0','ins-1','ins-2','ins-3','ins-4','ins-5','ins-6','ins-7'];
+const INS_MAP = {};
+function insColor(name) {
+  if(!INS_MAP[name]) INS_MAP[name] = INS_COLORS[Object.keys(INS_MAP).length%INS_COLORS.length];
+  return INS_MAP[name];
+}
+function insAbbr(name) {
+  const m={'ICICI Prudential Life':'ICICI','HDFC Life':'HDFC','Tata AIA Life':'TATA','Max Life':'MAX','Axis Max Life':'AX','Bajaj Allianz Life':'BAJAJ','Canara HSBC OBC':'CANARA','Aditya Birla Life':'ABSLI','PNB Metlife':'PNB','Bandhan Life':'BDN','Kotak Life':'KOTAK','SBI Life':'SBI','Digit Life':'DIGIT','Shriram Life Insurance':'SHRI'};
+  return m[name]||name.slice(0,4).toUpperCase();
+}
+
+function buildResults(results) {
+  const t = T[lang];
+  const top = results[0];
+  const goalLabel = t.goalLabels[state.goal]||state.goal;
+  const riskLabel = t.riskLabels[state.risk]||state.risk;
+
+  let cardsHTML = results.slice(0,3).map((s,i) => {
+    const {plan,checks} = s;
+    const typeLabel = t.typeLabels[plan.type]||plan.type;
+    const checkSVG = `<svg viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const whyText = buildWhy(s, state.goal, state.risk, t);
+    const rankLabel = i===0 ? `<span style="background:var(--brand);color:white;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;margin-left:8px">${t.bestMatch}</span>` : `<span style="background:var(--bg);color:var(--text3);font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;margin-left:8px">${t.altMatch} ${i}</span>`;
+
+    return `<div class="result-card" data-idx="${i}">
+      <div style="display:flex;align-items:center;margin-bottom:12px">
+        <span class="plan-pill type-${plan.type}" style="margin-bottom:0">${typeLabel}</span>
+        ${rankLabel}
+      </div>
+      <div class="plan-header-row">
+        <div class="insurer-badge ${insColor(plan.insurer)}">${insAbbr(plan.insurer)}</div>
+        <div>
+          <div class="plan-name-big">${plan.name}</div>
+          <div class="plan-insurer-name">${plan.insurer}</div>
+        </div>
+      </div>
+
+      <div class="checks">${checks.map(c=>`<div class="check-tag">${checkSVG}${c}</div>`).join('')}</div>
+      ${['guaranteed','ulip','par_endowment','pension'].includes(plan.type) ? `<div class="irr-box"><span class="irr-label">${t.irrLabel}</span><span class="irr-val">${plan.type==='ulip'?t.irrUlip:plan.type==='par_endowment'?t.irrPar:plan.type==='pension'?t.irrPension:t.irrGuaranteed}</span><span class="irr-note">${plan.type==='ulip'?t.irrUlipNote:t.irrNote}</span></div>` : ''}
+      <div class="why-box"><div class="why-title">${t.whyTitle}</div><div class="why-text">${whyText}</div></div>
+      <div class="feat-grid">${plan.key_features.map(f=>`<span class="feat-chip">${f}</span>`).join('')}</div>
+    </div>`;
+  }).join('');
+
+  const dots = results.slice(0,3).map((_,i)=>`<div class="dot ${i===0?'active':''}" data-idx="${i}"></div>`).join('');
+
+  document.getElementById('resultInner').innerHTML = `
+    <div class="result-banner">
+      <div class="result-banner-label">${t.recommendedFor}</div>
+      <div class="result-banner-name">${state.name}</div>
+      <div class="result-banner-sub">${goalLabel} · ${riskLabel} · ${Math.min(results.length,3)} ${t.planCount}</div>
+    </div>
+    <div class="card-dots" id="cardDots">${dots}</div>
+    <div class="cards-area">
+      <div class="cards-scroll" id="cardsScroll">${cardsHTML}</div>
+    </div>
+    <div style="padding:12px 20px 8px; flex-shrink:0">
+      <div style="text-align:center;font-size:11px;color:var(--text3);margin-bottom:10px">${t.swipeHint}</div>
+      <button class="wa-btn" onclick="shareWhatsApp()"><span class="wa-icon">💬</span>${t.waBtn}</button>
+      <button class="reset-btn" onclick="resetAll()">${t.resetBtn}</button>
+    </div>`;
+
+  // Dot sync
+  setTimeout(()=>{
+    const scroll = document.getElementById('cardsScroll');
+    if(scroll) scroll.addEventListener('scroll', ()=>{
+      const idx = Math.round(scroll.scrollLeft / scroll.offsetWidth);
+      document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
+    });
+  }, 100);
+}
+
+function buildWhy(s, goal, risk, t) {
+  const {plan,gf,aff,rf,ten} = s;
+  const parts = [];
+  if(gf===3) parts.push(lang==='hi'?`यह ${t.typeLabels[plan.type]} आपके ${t.goalLabels[goal]} के लक्ष्य से सीधे मेल खाता है।`:`This ${t.typeLabels[plan.type]} directly matches the ${t.goalLabels[goal]} goal.`);
+  else if(gf===2) parts.push(lang==='hi'?`यह प्लान आंशिक रूप से ${t.goalLabels[goal]} लक्ष्य को पूरा करता है।`:`This plan partially addresses the ${t.goalLabels[goal]} goal.`);
+  if(aff>=2) parts.push(lang==='hi'?`प्रीमियम बजट के अंदर और आय के अनुपात में उचित है।`:`Premium fits comfortably within the stated budget.`);
+  if(rf===3) parts.push(lang==='hi'?`${t.riskLabels[risk]} जोखिम प्रोफाइल के लिए बिल्कुल सही।`:`Perfectly suited for a ${t.riskLabels[risk]} risk profile.`);
+  if(ten>=2) parts.push(lang==='hi'?`पॉलिसी की अवधि पसंदीदा समयसीमा से मेल खाती है।`:`Policy tenure aligns with preferred timeframe.`);
+  return parts.slice(0,2).join(' ');
+}
+
+
+
+// ═══════════════════════════════════
+// WHATSAPP SHARE
+// ═══════════════════════════════════
+function shareWhatsApp() {
+  const t = T[lang];
+  const goalLabel = t.goalLabels[state.goal]||state.goal;
+  const riskLabel = t.riskLabels[state.risk]||state.risk;
+  const scroll = document.getElementById('cardsScroll');
+  const cards = scroll.querySelectorAll('.result-card');
+
+  // Collect all 3 plan details from the DOM
+  const planDetails = [];
+  cards.forEach((card, i) => {
+    const name = card.querySelector('.plan-name-big')?.textContent||'';
+    const ins  = card.querySelector('.plan-insurer-name')?.textContent||'';
+    const type = card.querySelector('.plan-pill')?.textContent||'';
+    const feats = Array.from(card.querySelectorAll('.feat-chip')).slice(0,2).map(f=>f.textContent).join(', ');
+    const why  = card.querySelector('.why-text')?.textContent||'';
+    planDetails.push({name,ins,type,feats,why,rank:i+1});
+  });
+
+  const medals = ['1st','2nd','3rd'];
+
+  let plansBlock = '';
+  if(lang==='hi') {
+    plansBlock = planDetails.map(p =>
+      `*${medals[p.rank-1]} विकल्प: ${p.name}*\n` +
+      `   बीमा कंपनी: ${p.ins}\n` +
+      `   प्रकार: ${p.type}\n` +
+      `   विशेषताएं: ${p.feats}\n` +
+      `   क्यों: ${p.why}`
+    ).join('\n\n');
+
+    const msg =
+      `*InsuranceDekho - जीवन बीमा सिफारिश*\n\n` +
+      `नमस्ते ${state.name} जी,\n\n` +
+      `आपकी प्रोफाइल (${goalLabel} - ${riskLabel}) के आधार पर, हमने 81 प्लान का विश्लेषण किया और आपके लिए शीर्ष 3 प्लान सुझाए हैं:\n\n` +
+      `${plansBlock}\n\n` +
+      `_InsuranceDekho द्वारा - www.insurancedekho.com_`;
+    window.open('https://wa.me/?text='+encodeURIComponent(msg), '_blank');
+  } else {
+    plansBlock = planDetails.map(p =>
+      `*${medals[p.rank-1]} Pick: ${p.name}*\n` +
+      `   Insurer: ${p.ins}\n` +
+      `   Type: ${p.type}\n` +
+      `   Features: ${p.feats}\n` +
+      `   Why: ${p.why}`
+    ).join('\n\n');
+
+    const msg =
+      `*InsuranceDekho - Life Insurance Recommendation*\n\n` +
+      `Hello ${state.name},\n\n` +
+      `Based on your profile (${goalLabel} - ${riskLabel}), we analysed 81 plans and found your top 3 matches:\n\n` +
+      `${plansBlock}\n\n` +
+      `_InsuranceDekho - www.insurancedekho.com_`;
+    window.open('https://wa.me/?text='+encodeURIComponent(msg), '_blank');
+  }
+}
+
+function resetAll() {
+  Object.keys(state).forEach(k=>state[k]=k==='name'?'':null);
+  document.querySelectorAll('.opt.selected,.opt-compact.selected').forEach(el=>el.classList.remove('selected'));
+  document.getElementById('clientName').value='';
+  // Remove ALL active/exit classes from every screen
+  document.querySelectorAll('.screen').forEach(s=>{
+    s.classList.remove('active','exit-left');
+  });
+  currentScreen = 'welcome';
+  document.getElementById('screenWelcome').classList.add('active');
+  document.getElementById('footerNav').style.display='none';
+  document.getElementById('progressShell').style.display='none';
+  Object.keys(INS_MAP).forEach(k=>delete INS_MAP[k]);
+  window.scrollTo(0,0);
+}
+
+// Init
+applyTranslations();
+</script>
+</body>
+</html>
